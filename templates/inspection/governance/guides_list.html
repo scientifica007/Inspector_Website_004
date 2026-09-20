@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}إدارة أدلة التفتيش الاختيارية{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3><i class="bi bi-compass"></i> أدلة التفتيش القياسية الاختيارية</h3>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createGuideModal">
+        <i class="bi bi-plus-circle"></i> إنشاء دليل جديد
+    </button>
+</div>
+
+<!-- Guides List -->
+<div class="card mb-4">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>عنوان الدليل</th>
+                        <th>المرجع المرتبط</th>
+                        <th>عدد العناصر المقترحة</th>
+                        <th>أنشئ بواسطة</th>
+                        <th>تاريخ الإنشاء</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for guide in guides %}
+                    <tr>
+                        <td><strong>{{ guide.title }}</strong></td>
+                        <td><span class="badge bg-success">{{ guide.reference.title }}</span></td>
+                        <td>{{ guide.entries.count }} عنصر</td>
+                        <td>{{ guide.created_by.username }}</td>
+                        <td>{{ guide.created_at|date:"d/m/Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-3 text-muted">لا توجد أدلة تفتيش معتمدة حالياً.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Create Guide -->
+<div class="modal fade" id="createGuideModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="post" action="{% url 'guide_create' %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title">إنشاء دليل تفتيش قياسي جديد</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-start">
+                    <div class="mb-3">
+                        <label class="form-label">عنوان الدليل *</label>
+                        <input type="text" name="title" class="form-control" required placeholder="مثال: دليل تفتيش الدخول التكويني">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">الوصف / الهدف</label>
+                        <textarea name="description" class="form-control" rows="2"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">المرجع المشترك المرتبط *</label>
+                        <select name="reference_id" id="guideRefSelect" class="form-select" required>
+                            <option value="">-- اختر المرجع --</option>
+                            {% for ref in shared_references %}
+                            <option value="{{ ref.id }}">{{ ref.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">العناصر الموصى بها في هذا الدليل</label>
+                        <div id="guideNodesContainer" class="p-3 bg-light border rounded" style="max-height: 250px; overflow-y: auto;">
+                            <p class="text-muted small">اختر مرجعاً لعرض بنوده...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">حفظ الدليل</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const sharedRefData = {
+        {% for ref in shared_references %}
+            "{{ ref.id }}": [
+                {% for node in ref.nodes.all %}
+                { id: "{{ node.node_id }}", title: "{{ node.title|escapejs }}", type: "{{ node.get_node_type_display }}" },
+                {% endfor %}
+            ],
+        {% endfor %}
+    };
+
+    document.getElementById("guideRefSelect").addEventListener("change", function() {
+        const refId = this.value;
+        const container = document.getElementById("guideNodesContainer");
+        container.innerHTML = "";
+        if(refId && sharedRefData[refId]) {
+            sharedRefData[refId].forEach(n => {
+                const div = document.createElement("div");
+                div.className = "form-check mb-1";
+                div.innerHTML = `
+                    <input type="checkbox" name="target_node_ids" value="${n.id}" class="form-check-input" id="gn_${n.id}">
+                    <label class="form-check-label" for="gn_${n.id}">[${n.type}] ${n.title}</label>
+                `;
+                container.appendChild(div);
+            });
+        } else {
+            container.innerHTML = '<p class="text-muted small">اختر مرجعاً لعرض بنوده...</p>';
+        }
+    });
+</script>
+{% endblock %}

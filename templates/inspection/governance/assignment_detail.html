@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}تفاصيل التكليف الرسمي{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h4 class="mb-0"><i class="bi bi-clipboard-check"></i> {{ assignment.title }}</h4>
+        <span class="badge badge-status-{{ assignment.status }} fs-6">{{ assignment.get_status_display }}</span>
+    </div>
+    <div class="card-body">
+        <p><strong>الزيارة المرتبطة:</strong> <a href="{% url 'visit_detail' assignment.visit.pk %}">زيارة #{{ assignment.visit.id }} - {{ assignment.visit.institution.name }}</a></p>
+        <p><strong>التفاصيل والتوجيهات:</strong> {{ assignment.description|default:"لا توجد تفاصيل إضافية." }}</p>
+        <p><strong>أنشئ بواسطة:</strong> {{ assignment.created_by.username }} في {{ assignment.created_at|date:"d/m/Y H:i" }}</p>
+
+        {% if assignment.status == "ISSUED" %}
+        <p class="text-success"><strong>تاريخ الإصدار الرسمي:</strong> {{ assignment.issued_at|date:"d/m/Y H:i" }}</p>
+        {% elif assignment.status == "REVOKED" %}
+        <div class="alert alert-danger">
+            <p class="mb-1"><strong>أُلغي بواسطة:</strong> {{ assignment.revoked_by.username }} في {{ assignment.revoked_at|date:"d/m/Y H:i" }}</p>
+            <p class="mb-0"><strong>سبب الإلغاء الرسمي:</strong> {{ assignment.revocation_reason }}</p>
+        </div>
+        {% endif %}
+
+        {% if user.is_admin_role and assignment.visit.status == "DRAFT" %}
+            <hr>
+            <div class="d-flex gap-2">
+                {% if assignment.status == "DRAFT" %}
+                <form method="post" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="issue">
+                    <button type="submit" class="btn btn-success" onclick="return confirm('إصدار هذا التكليف رسمياً وإلزام المفتش بالقيود المحددة؟')">
+                        <i class="bi bi-send-check"></i> إصدار التكليف الذري (Issue Assignment)
+                    </button>
+                </form>
+                {% elif assignment.status == "ISSUED" %}
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#revokeModal">
+                    <i class="bi bi-x-circle"></i> إلغاء التكليف الرسمي (Revoke)
+                </button>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal Revoke Assignment -->
+<div class="modal fade" id="revokeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="revoke">
+                <div class="modal-header">
+                    <h5 class="modal-title">إلغاء التكليف الرسمي</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-start">
+                    <div class="mb-3">
+                        <label class="form-label">سبب الإلغاء الرسمي (مطلوب) *</label>
+                        <textarea name="revocation_reason" class="form-control" rows="3" required placeholder="أدخل سبب إلغاء هذا التكليف للإبقاء على السجل التدقيقي..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">تراجع</button>
+                    <button type="submit" class="btn btn-danger">تأكيد الإلغاء الرسمي</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Target Entries and Constraints Table -->
+<div class="card">
+    <div class="card-header bg-light">
+        <h5 class="mb-0">العناصر والقيود المفروضة في هذا التكليف</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>العنصر المستهدف</th>
+                        <th>مقفل النطاق (Scope Locked)</th>
+                        <th>إلزامي الإكمال (Completion Required)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in entries_with_items %}
+                    <tr>
+                        <td>
+                            <strong>{{ row.item.title }}</strong>
+                            {% if row.item.description %}<div class="small text-muted">{{ row.item.description }}</div>{% endif %}
+                        </td>
+                        <td>
+                            {% if row.entry.scope_locked %}
+                                <span class="badge bg-danger"><i class="bi bi-lock-fill"></i> نعم (ممنوع الاستبعاد)</span>
+                            {% else %}
+                                <span class="badge bg-secondary">لا</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if row.entry.completion_required %}
+                                <span class="badge bg-warning text-dark"><i class="bi bi-asterisk"></i> نعم (إلزامي لإكمال الزيارة)</span>
+                            {% else %}
+                                <span class="badge bg-secondary">لا</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center py-3 text-muted">لا توجد بنود مسجلة لهذا التكليف.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

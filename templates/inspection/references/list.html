@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}مكتبة مراجع التفتيش{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3><i class="bi bi-book"></i> مكتبة مراجع التفتيش</h3>
+    <a href="{% url 'reference_create' %}" class="btn btn-primary"><i class="bi bi-plus-circle"></i> إنشاء مرجع جديد</a>
+</div>
+
+<ul class="nav nav-tabs mb-3" id="refTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="shared-tab" data-bs-toggle="tab" data-bs-target="#shared-refs" type="button" role="tab">المراجع المشتركة العامة</button>
+    </li>
+    {% if user.is_inspector_role %}
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="private-tab" data-bs-toggle="tab" data-bs-target="#private-refs" type="button" role="tab">مراجعك الخاصة</button>
+    </li>
+    {% endif %}
+</ul>
+
+<div class="tab-content" id="refTabsContent">
+    <div class="tab-pane fade show active" id="shared-refs" role="tabpanel">
+        <div class="row g-3">
+            {% for ref in shared_references %}
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h5 class="card-title text-primary mb-0">{{ ref.title }}</h5>
+                            <span class="badge bg-success">مشترك</span>
+                        </div>
+                        <p class="card-text text-muted small">{{ ref.description|default:"لا يوجد وصف." }}</p>
+                        <div class="d-flex justify-content-between align-items-center mt-3 fs-7 text-secondary">
+                            <span><i class="bi bi-diagram-3"></i> {{ ref.nodes.count }} عنصر</span>
+                            <a href="{% url 'reference_detail' ref.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i> استعراض البنية</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12"><p class="text-muted">لا توجد مراجع مشتركة مسجلة.</p></div>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% if user.is_inspector_role %}
+    <div class="tab-pane fade" id="private-refs" role="tabpanel">
+        <div class="row g-3">
+            {% for ref in private_references %}
+            <div class="col-md-6">
+                <div class="card h-100 border-info">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h5 class="card-title text-info mb-0">{{ ref.title }}</h5>
+                            <span class="badge bg-info text-dark">خاص بك</span>
+                        </div>
+                        <p class="card-text text-muted small">{{ ref.description|default:"لا يوجد وصف." }}</p>
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <span><i class="bi bi-diagram-3"></i> {{ ref.nodes.count }} عنصر</span>
+                            <a href="{% url 'reference_detail' ref.pk %}" class="btn btn-sm btn-outline-info"><i class="bi bi-eye"></i> تفاصيل المرجع الخاص</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12"><p class="text-muted">لم تقم بإنشاء مراجع خاصة بعد.</p></div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

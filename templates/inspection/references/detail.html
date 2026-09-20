@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}{{ reference.title }}{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <h3>{{ reference.title }}</h3>
+                <p class="text-muted">{{ reference.description|default:"بدون وصف" }}</p>
+                <div>
+                    {% if reference.is_shared %}
+                    <span class="badge bg-success">مرجع مشترك عام</span>
+                    {% else %}
+                    <span class="badge bg-info text-dark">مرجع خاص بالمفتش: {{ reference.owner.username }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div>
+                {% if not reference.is_shared and reference.owner == user %}
+                <form method="post" action="{% url 'reference_submit_generalization' reference.pk %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-warning" onclick="return confirm('هل أنت تأكد من تقديم طلب لتعميم هذا المرجع الخاص؟')">
+                        <i class="bi bi-send"></i> اقتراح للتعميم (إرسال للمراجعة)
+                    </button>
+                </form>
+                {% endif %}
+                <a href="{% url 'reference_list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-right"></i> العودة للمكتبة</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="bi bi-diagram-3"></i> البنية الهرمية للمرجع</h5>
+    </div>
+    <div class="card-body">
+        {% if root_nodes %}
+            <ul class="list-group list-group-flush">
+                {% for node in root_nodes %}
+                <li class="list-group-item bg-light">
+                    <strong><i class="bi bi-folder2-open text-primary"></i> {{ node.get_node_type_display }}: {{ node.title }}</strong>
+                    {% if node.description %}<p class="small text-muted mb-1">{{ node.description }}</p>{% endif %}
+
+                    {% if node.children.all %}
+                    <ul class="list-group ms-3 mt-2">
+                        {% for sub in node.children.all %}
+                        <li class="list-group-item">
+                            <strong><i class="bi bi-card-text text-info"></i> {{ sub.get_node_type_display }}: {{ sub.title }}</strong>
+                            {% if sub.description %}<p class="small text-muted mb-1">{{ sub.description }}</p>{% endif %}
+
+                            {% if sub.children.all %}
+                            <ul class="list-group ms-3 mt-2">
+                                {% for item in sub.children.all %}
+                                <li class="list-group-item list-group-item-action">
+                                    <i class="bi bi-check2-square text-success"></i> <strong>{{ item.get_node_type_display }}: {{ item.title }}</strong>
+                                    {% if item.description %}<p class="small text-muted mb-0">{{ item.description }}</p>{% endif %}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-muted text-center py-3">لا توجد عناصر هرمية مضافة في هذا المرجع.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

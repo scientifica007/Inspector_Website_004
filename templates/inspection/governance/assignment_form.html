@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}إصدار تكليف رسمي جديد للزيارة #{{ visit.id }}{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-header bg-dark text-white">
+        <h4 class="mb-0"><i class="bi bi-clipboard-plus"></i> إنشاء تكليف رسمي (Required Assignment) للزيارة #{{ visit.id }}</h4>
+    </div>
+    <div class="card-body">
+        <p><strong>المؤسسة:</strong> {{ visit.institution.name }} | <strong>المفتش المكلف:</strong> {{ visit.inspector.username }}</p>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label">عنوان التكليف الرسمي *</label>
+                <input type="text" name="title" class="form-control" required placeholder="مثال: تكليف تفتيش سلامة المخابر والمعدات">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">تفاصيل وتوجيهات التكليف</label>
+                <textarea name="description" class="form-control" rows="2"></textarea>
+            </div>
+
+            <hr class="my-4">
+
+            <h5>تحديد العناصر المستهدفة والقيود (Entries & Constraints)</h5>
+            <p class="text-muted small">اختر العناصر وفرض القيود المستقلة: قفل النطاق (Scope Lock) والإلزام بالإكمال (Completion Required):</p>
+
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 50px;">تحديد</th>
+                            <th>العنصر</th>
+                            <th>نوع العنصر</th>
+                            <th>قفل النطاق (Scope Locked)</th>
+                            <th>إلزامي الإكمال (Completion Required)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr>
+                            <td class="text-center">
+                                <input type="checkbox" name="selected_nodes" value="{{ item.node_id }}" class="form-check-input">
+                            </td>
+                            <td>
+                                <strong>{{ item.title }}</strong>
+                                {% if item.description %}<div class="small text-muted">{{ item.description }}</div>{% endif %}
+                            </td>
+                            <td><span class="badge bg-secondary">{{ item.get_node_type_display }}</span></td>
+                            <td>
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="scope_locked_{{ item.node_id }}" value="true" class="form-check-input" id="sl_{{ item.node_id }}">
+                                    <label class="form-check-label" for="sl_{{ item.node_id }}">ممنوع الاستبعاد</label>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="completion_required_{{ item.node_id }}" value="true" class="form-check-input" id="cr_{{ item.node_id }}">
+                                    <label class="form-check-label" for="cr_{{ item.node_id }}">إلزامي لإكمال الزيارة</label>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{% url 'visit_detail' visit.pk %}" class="btn btn-secondary">إلغاء</a>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> حفظ مسودة التكليف</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

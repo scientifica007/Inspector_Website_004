@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}الزيارات التفتيشية{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3><i class="bi bi-journal-check"></i> الزيارات التفتيشية الميدانية</h3>
+    {% if user.is_inspector_role %}
+    <a href="{% url 'visit_create' %}" class="btn btn-primary"><i class="bi bi-plus-circle"></i> إنشاء زيارة جديدة</a>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>رقم الزيارة</th>
+                        <th>المؤسسة المعنية</th>
+                        <th>تاريخ الزيارة</th>
+                        <th>المفتش المسؤول</th>
+                        <th>المرجع المستعمل</th>
+                        <th>الحالة</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for visit in visits %}
+                    <tr>
+                        <td>#{{ visit.id }}</td>
+                        <td><strong>{{ visit.institution.name }}</strong></td>
+                        <td>{{ visit.visit_date|date:"d/m/Y" }}</td>
+                        <td>{{ visit.inspector.username }}</td>
+                        <td><span class="badge bg-light text-dark border">{{ visit.source_reference_title|default:"بدون مرجع" }}</span></td>
+                        <td>
+                            <span class="badge badge-status-{{ visit.status }}">{{ visit.get_status_display }}</span>
+                        </td>
+                        <td>
+                            <a href="{% url 'visit_detail' visit.pk %}" class="btn btn-sm btn-primary"><i class="bi bi-gear"></i> إدارة وتنفيذ الزيارة</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">لا توجد زيارات تفتيشية مسجلة.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

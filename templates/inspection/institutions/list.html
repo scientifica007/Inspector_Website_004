@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}إدارة المؤسسات{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3><i class="bi bi-building"></i> قائمة المؤسسات التي تتم زيارتها</h3>
+    {% if user.is_admin_role %}
+    <a href="{% url 'institution_create' %}" class="btn btn-primary"><i class="bi bi-plus-circle"></i> إضافة مؤسسة جديد</a>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>الرمز</th>
+                        <th>اسم المؤسسة</th>
+                        <th>النوع</th>
+                        <th>المدينة / الولاية</th>
+                        <th>الحالة</th>
+                        {% if user.is_admin_role %}<th>الإجراءات</th>{% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inst in institutions %}
+                    <tr>
+                        <td>{{ inst.code|default:"-" }}</td>
+                        <td><strong>{{ inst.name }}</strong></td>
+                        <td>{{ inst.institution_type|default:"-" }}</td>
+                        <td>{{ inst.city|default:"-" }}</td>
+                        <td>
+                            {% if inst.is_active %}
+                            <span class="badge bg-success">نشطة</span>
+                            {% else %}
+                            <span class="badge bg-secondary">غير نشطة</span>
+                            {% endif %}
+                        </td>
+                        {% if user.is_admin_role %}
+                        <td>
+                            <a href="{% url 'institution_edit' inst.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i> تعديل</a>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-3 text-muted">لا توجد مؤسسات مسجلة.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

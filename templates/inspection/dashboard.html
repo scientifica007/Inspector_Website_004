@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}لوحة التحكم{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2>مرحباً، {{ user.username }}</h2>
+        <p class="text-muted">دورك الحالي: <strong>{{ user.get_role_display }}</strong></p>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card bg-primary text-white p-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6>إجمالي الزيارات</h6>
+                    <h2 class="mb-0">{{ total_visits }}</h2>
+                </div>
+                <i class="bi bi-journal-check fs-1"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-info text-white p-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6>طلبات التعميم</h6>
+                    <h2 class="mb-0">{{ pending_submissions }}</h2>
+                </div>
+                <i class="bi bi-inbox fs-1"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-warning text-dark p-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6>التكليفات الرسمية</h6>
+                    <h2 class="mb-0">{{ assignments_count }}</h2>
+                </div>
+                <i class="bi bi-clipboard-data fs-1"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">آخر الزيارات التفتيشية</h5>
+        <a href="{% url 'visit_list' %}" class="btn btn-sm btn-outline-primary">عرض الكل</a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>المؤسسة</th>
+                        <th>تاريخ الزيارة</th>
+                        <th>المفتش</th>
+                        <th>الحالة</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for visit in recent_visits %}
+                    <tr>
+                        <td>{{ visit.institution.name }}</td>
+                        <td>{{ visit.visit_date|date:"d/m/Y" }}</td>
+                        <td>{{ visit.inspector.username }}</td>
+                        <td>
+                            <span class="badge badge-status-{{ visit.status }}">{{ visit.get_status_display }}</span>
+                        </td>
+                        <td>
+                            <a href="{% url 'visit_detail' visit.pk %}" class="btn btn-sm btn-light"><i class="bi bi-eye"></i> تفاصيل</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-3">لا توجد زيارات مسجلة حديثاً.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
