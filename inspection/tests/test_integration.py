@@ -40,6 +40,11 @@ class EndToEndSystemTestCase(TestCase):
 
         self.institution = Institution.objects.create(name="مؤسسة الاختبار الشاملة", code="EXP-100")
 
+    def test_login_page_renders(self):
+        response = self.client.get(reverse("login"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "inspection/auth/login.html")
+
     def test_permissions_and_private_reference_isolation(self):
         # Inspector 1 creates private reference
         ref1 = ReferenceService.create_reference(
