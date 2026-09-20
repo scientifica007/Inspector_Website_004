@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title_page }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h4>{{ title_page }}</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" id="refForm">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">عنوان المرجع *</label>
+                        <input type="text" name="title" class="form-control" required placeholder="مثال: مرجع متابعة التجهيزات التقنية">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">الوصف / التوضيح</label>
+                        <textarea name="description" class="form-control" rows="2"></textarea>
+                    </div>
+
+                    {% if user.is_admin_role %}
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" name="is_shared" value="true" class="form-check-input" id="isSharedCheck" checked>
+                        <label class="form-check-label" for="isSharedCheck">مرجع مشترك عام لكافة المفتشين</label>
+                    </div>
+                    {% endif %}
+
+                    <hr>
+
+                    <h5 class="mb-3">بنية المرجع الأولية (تفاعلي)</h5>
+                    <div id="treeBuilder" class="mb-3 p-3 bg-light rounded border">
+                        <p class="small text-muted mb-2">إضافة فرع بيداغوجي / قسم هرمي:</p>
+                        <div class="input-group mb-2">
+                            <input type="text" id="branchTitle" class="form-control" placeholder="اسم الفرع (مثل: فرع السلامة والوقاية)">
+                            <button type="button" class="btn btn-outline-primary" id="addBranchBtn"><i class="bi bi-plus-lg"></i> إضافة فرع</button>
+                        </div>
+                        <ul id="treePreview" class="list-group mt-3"></ul>
+                    </div>
+
+                    <input type="hidden" name="nodes_json" id="nodesJsonInput" value="[]">
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'reference_list' %}" class="btn btn-secondary">إلغاء</a>
+                        <button type="submit" class="btn btn-success"><i class="bi bi-check-circle"></i> حفظ المرجع</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let treeData = [];
+
+    document.getElementById("addBranchBtn").addEventListener("click", function() {
+        const title = document.getElementById("branchTitle").value.trim();
+        if(!title) return;
+        treeData.push({
+            title: title,
+            node_type: "BRANCH",
+            children: []
+        });
+        document.getElementById("branchTitle").value = "";
+        renderTree();
+    });
+
+    function addChecklistItem(branchIndex) {
+        const itemTitle = prompt("أدخل عنوان بند التفتيش للفرع:");
+        if(itemTitle && itemTitle.trim()) {
+            treeData[branchIndex].children.push({
+                title: itemTitle.trim(),
+                node_type: "CHECKLIST_ITEM",
+                children: []
+            });
+            renderTree();
+        }
+    }
+
+    function renderTree() {
+        const preview = document.getElementById("treePreview");
+        preview.innerHTML = "";
+        treeData.forEach((b, idx) => {
+            let li = document.createElement("li");
+            li.className = "list-group-item";
+            li.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center">
+                    <strong><i class="bi bi-folder text-primary"></i> ${b.title}</strong>
+                    <button type="button" class="btn btn-sm btn-outline-success" onclick="addChecklistItem(${idx})"><i class="bi bi-plus"></i> إضافة بند</button>
+                </div>
+                <ul class="list-group mt-2">
+                    ${b.children.map(c => `<li class="list-group-item list-group-item-light"><i class="bi bi-check2-square text-success"></i> ${c.title}</li>`).join('')}
+                </ul>
+            `;
+            preview.appendChild(li);
+        });
+        document.getElementById("nodesJsonInput").value = JSON.stringify(treeData);
+    }
+</script>
+{% endblock %}

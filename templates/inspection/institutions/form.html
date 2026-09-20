@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h4 class="mb-0">{{ title }}</h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">اسم المؤسسة *</label>
+                        {{ form.name }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">نوع المؤسسة</label>
+                        {{ form.institution_type }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">رمز المؤسسة</label>
+                        {{ form.code }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">المدينة / الولاية</label>
+                        {{ form.city }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">العنوان التفصيلي</label>
+                        {{ form.address }}
+                    </div>
+                    <div class="mb-3 form-check">
+                        {{ form.is_active }}
+                        <label class="form-check-label">مؤسسة نشطة</label>
+                    </div>
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'institution_list' %}" class="btn btn-secondary"><i class="bi bi-arrow-right"></i> إلغاء</a>
+                        <button type="submit" class="btn btn-success"><i class="bi bi-check-circle"></i> حفظ</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
