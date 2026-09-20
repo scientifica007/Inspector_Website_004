@@ -50,7 +50,7 @@ git clone https://github.com/scientifica007/Inspector_Website_004.git
 cd Inspector_Website_004
 
 python3 -m venv venv
-source venv/bin/venv/bin/activate  # أو venv\Scripts\activate على Windows
+source venv/bin/activate  # أو venv\Scripts\activate على Windows
 ```
 
 ### 2. تثبيت الحزم والمكتبات
